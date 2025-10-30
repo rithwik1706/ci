@@ -24,31 +24,28 @@ pipeline {
         stage('Restart App with PM2') {
             steps {
                 echo "🚀 Restarting app with PM2..."
-                bat '''
-                    echo Checking PM2 path:
-                    where pm2
-                    
-                    echo Deleting old process (if exists)...
-                    pm2 delete express-hi 1>nul 2>&1 || echo "No existing process"
+                bat """
+                echo Checking PM2 path:
+                where pm2
 
-                    echo Starting new process...
-                    pm2 start index.js --name "express-hi"
+                echo Deleting old process (if exists)...
+                pm2 delete express-hi || echo No existing process
 
-                    echo Saving PM2 process list...
-                    pm2 save
+                echo Starting new process...
+                pm2 start index.js --name express-hi
 
-                    echo ✅ App restarted successfully!
-                '''
+                echo Saving PM2 state...
+                pm2 save
+
+                echo ✅ PM2 process started successfully!
+                """
             }
         }
 
         stage('Post-Deployment Check') {
             steps {
-                echo "🔍 Checking if app is running..."
-                bat '''
-                    pm2 list
-                    pm2 show express-hi
-                '''
+                echo "🔍 Checking PM2 processes..."
+                bat "pm2 list && pm2 show express-hi"
             }
         }
     }

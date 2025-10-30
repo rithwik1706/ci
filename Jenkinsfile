@@ -1,25 +1,39 @@
 pipeline {
     agent any
 
+    environment {
+        // Force Jenkins to use your PM2 installation
+        PM2_HOME = "C:\\Users\\LAXMAN SAI\\.pm2"
+        PATH = "C:\\Users\\LAXMAN SAI\\AppData\\Roaming\\npm;${PATH}"
+    }
+
     stages {
-        stage('Pull Code') {
+        stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/rithwik1706/ci.git'
+                echo 'Pulling latest code...'
+                checkout scm
             }
         }
 
         stage('Install Dependencies') {
             steps {
+                echo 'Installing NPM packages...'
                 bat 'npm install'
             }
         }
 
-        stage('Restart App with PM2') {
+        stage('Build') {
             steps {
+                echo 'Build complete. No custom build steps yet.'
+            }
+        }
+
+        stage('Deploy with PM2') {
+            steps {
+                echo 'Starting/Restarting Express app with PM2...'
                 bat '''
-                pm2 stop express-hi || echo "App not running"
-                pm2 delete express-hi || echo "No existing app"
-                pm2 start index.js --name express-hi
+                pm2 delete express-hi || exit 0
+                pm2 start app.js --name express-hi
                 pm2 save
                 '''
             }
@@ -28,10 +42,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Deployment successful — App is running under PM2!'
+            echo '✅ Build and deploy successful!'
         }
         failure {
-            echo '❌ Deployment failed — Check Jenkins logs.'
+            echo '❌ Build or deployment failed.'
         }
     }
 }

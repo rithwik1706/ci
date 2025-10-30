@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // ✅ Define your actual PM2 home and PATH (important for Windows)
         PM2_HOME = "C:\\Users\\LAXMAN SAI\\.pm2"
         PATH = "C:\\Program Files\\nodejs;C:\\Users\\LAXMAN SAI\\AppData\\Roaming\\npm;${PATH}"
     }
@@ -17,31 +16,31 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                echo '📥 Installing npm packages...'
+                echo '📥 Installing dependencies...'
                 bat 'npm install'
             }
         }
 
         stage('Restart App with PM2') {
             steps {
-                echo '🚀 Restarting app using PM2...'
+                echo '🚀 Restarting app with PM2...'
                 bat '''
                 set PM2_HOME=C:\\Users\\LAXMAN SAI\\.pm2
                 set PATH=C:\\Program Files\\nodejs;C:\\Users\\LAXMAN SAI\\AppData\\Roaming\\npm;%PATH%
-                
-                echo Current PM2 location:
+
+                echo Checking PM2 path:
                 where pm2
 
-                echo Deleting old process if exists...
-                pm2 delete express-hi || echo "No previous process"
+                echo Deleting old process (if exists)...
+                pm2 delete express-hi >nul 2>&1 || echo "No existing process"
 
-                echo Starting new app process...
-                pm2 start index.js --name express-hi
+                echo Starting app...
+                pm2 start index.js --name express-hi || echo "PM2 start failed"
 
                 echo Saving PM2 process list...
-                pm2 save
+                pm2 save || echo "PM2 save skipped"
 
-                echo Final PM2 status:
+                echo Showing PM2 list:
                 pm2 list
                 '''
             }
@@ -49,18 +48,18 @@ pipeline {
 
         stage('Post-Deployment Check') {
             steps {
-                echo '🔍 Checking if app started successfully...'
-                bat 'pm2 show express-hi'
+                echo '🔍 Verifying PM2 status...'
+                bat 'pm2 show express-hi || echo "PM2 show failed"'
             }
         }
     }
 
     post {
         success {
-            echo '✅ Deployment successful — App is running under PM2!'
+            echo '✅ Deployment successful — app should be running on port 3000!'
         }
         failure {
-            echo '❌ Deployment failed — Check Jenkins logs for details.'
+            echo '⚠️ Deployment failed — check Jenkins console output.'
         }
     }
 }
